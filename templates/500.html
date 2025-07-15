@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Errore del Server - dabba{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 text-center">
+            <div class="error-container">
+                <div class="error-icon mb-4">
+                    <i class="fas fa-server fa-4x text-danger"></i>
+                </div>
+                <h1 class="display-4 fw-bold text-danger">500</h1>
+                <h2 class="h4 mb-3">Errore Interno del Server</h2>
+                <p class="text-muted mb-4">
+                    Si è verificato un errore interno. 
+                    Il nostro team è stato notificato e sta lavorando per risolvere il problema.
+                </p>
+                <div class="d-flex gap-3 justify-content-center">
+                    <a href="{{ url_for('index') }}" class="btn btn-primary">
+                        <i class="fas fa-home me-2"></i>
+                        Torna alla Home
+                    </a>
+                    <button onclick="history.back()" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>
+                        Indietro
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.error-container {
+    padding: 2rem;
+}
+
+.error-icon {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+</style>
+{% endblock %}

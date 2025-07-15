@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+
+{% block title %}Pagamento - dabba{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h3 class="mb-0">
+                        <i class="fas fa-credit-card me-2"></i>Complete Payment
+                    </h3>
+                </div>
+                <div class="card-body p-4">
+                    <!-- Order Summary -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5>Shipment Details</h5>
+                            <div class="border rounded p-3 bg-light">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Shipment ID:</span>
+                                    <strong>#{{ shipment.id }}</strong>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Route:</span>
+                                    <strong>{{ shipment.origin }} → {{ shipment.destination }}</strong>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Weight:</span>
+                                    <strong>{{ shipment.weight }} kg</strong>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Transporter:</span>
+                                    <strong>{{ shipment.transporter.get_full_name() }}</strong>
+                                </div>
+                                <hr>
+                                <div class="d-flex justify-content-between">
+                                    <span class="h5">Total Amount:</span>
+                                    <span class="h5 text-success">€{{ "%.2f"|format(shipment.price) }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h5>Payment Information</h5>
+                            <form action="{{ url_for('process_payment') }}" method="POST">
+                                {{ form.hidden_tag() }}
+                                <input type="hidden" name="shipment_id" value="{{ shipment.id }}">
+                                
+                                <div class="mb-3">
+                                    {{ form.cardholder_name.label(class="form-label") }}
+                                    {{ form.cardholder_name(class="form-control") }}
+                                    {% if form.cardholder_name.errors %}
+                                        {% for error in form.cardholder_name.errors %}
+                                            <div class="text-danger small">{{ error }}</div>
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="mb-3">
+                                    {{ form.card_number.label(class="form-label") }}
+                                    {{ form.card_number(class="form-control", placeholder="1234 5678 9012 3456") }}
+                                    {% if form.card_number.errors %}
+                                        {% for error in form.card_number.errors %}
+                                            <div class="text-danger small">{{ error }}</div>
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-4 mb-3">
+                                        {{ form.expiry_month.label(class="form-label") }}
+                                        {{ form.expiry_month(class="form-select") }}
+                                        {% if form.expiry_month.errors %}
+                                            {% for error in form.expiry_month.errors %}
+                                                <div class="text-danger small">{{ error }}</div>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-4 mb-3">
+                                        {{ form.expiry_year.label(class="form-label") }}
+                                        {{ form.expiry_year(class="form-select") }}
+                                        {% if form.expiry_year.errors %}
+                                            {% for error in form.expiry_year.errors %}
+                                                <div class="text-danger small">{{ error }}</div>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-4 mb-3">
+                                        {{ form.cvv.label(class="form-label") }}
+                                        {{ form.cvv(class="form-control", placeholder="123") }}
+                                        {% if form.cvv.errors %}
+                                            {% for error in form.cvv.errors %}
+                                                <div class="text-danger small">{{ error }}</div>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                <div class="alert alert-info">
+                                    <i class="fas fa-shield-alt me-2"></i>
+                                    <strong>Secure Payment:</strong> This is a simulated payment for demonstration purposes. 
+                                    No real money will be charged.
+                                </div>
+                                
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <strong>Payment Protection:</strong> Your payment will be held securely until the package is delivered and confirmed by you.
+                                </div>
+                                
+                                <div class="d-flex gap-3">
+                                    <button type="submit" class="btn btn-success btn-lg flex-fill">
+                                        <i class="fas fa-lock me-2"></i>Pay €{{ "%.2f"|format(shipment.price) }}
+                                    </button>
+                                    <a href="{{ url_for('shipment_details', shipment_id=shipment.id) }}" 
+                                       class="btn btn-outline-secondary btn-lg">
+                                        Cancel
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <!-- Security Features -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <h6 class="text-muted mb-3">Why dabba Payment is Safe</h6>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-shield-alt text-success me-3"></i>
+                                        <div>
+                                            <strong>Secure Encryption</strong>
+                                            <small class="d-block text-muted">Bank-level SSL encryption</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-hand-holding-usd text-success me-3"></i>
+                                        <div>
+                                            <strong>Escrow Service</strong>
+                                            <small class="d-block text-muted">Payment held until delivery</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-undo text-success me-3"></i>
+                                        <div>
+                                            <strong>Refund Protection</strong>
+                                            <small class="d-block text-muted">Full refund if not delivered</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

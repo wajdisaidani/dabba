@@ -1,0 +1,340 @@
+{% extends "base.html" %}
+
+{% block title %}Pannello - dabba{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-12">
+            <!-- Modern Action Section -->
+            <div class="text-center mb-5">
+                <h1 class="fw-bold mb-2">Ciao, {{ current_user.first_name }}!</h1>
+                <p class="text-muted mb-4">Cosa vuoi fare oggi?</p>
+                
+                <!-- Main Action Buttons -->
+                <div class="row g-3 justify-content-center mb-4">
+                    <div class="col-md-4">
+                        <a href="{{ url_for('browse_shipments') }}" class="btn btn-primary btn-lg w-100 py-3">
+                            <i class="fas fa-search fa-2x d-block mb-2"></i>
+                            <strong>Cerca</strong>
+                            <div class="small">Trova spedizioni</div>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="{{ url_for('post_shipment') }}" class="btn btn-success btn-lg w-100 py-3">
+                            <i class="fas fa-plus fa-2x d-block mb-2"></i>
+                            <strong>Pubblica</strong>
+                            <div class="small">La tua spedizione</div>
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Quick Search Form -->
+                <div class="row justify-content-center">
+                    <div class="col-lg-8">
+                        <div class="card shadow-sm">
+                            <div class="card-body p-4">
+                                <form method="GET" action="{{ url_for('browse_shipments') }}">
+                                    <div class="row g-3">
+                                        <div class="col-md-4">
+                                            <div class="form-floating">
+                                                <input type="text" class="form-control" id="origin" name="origin" placeholder="Partenza da">
+                                                <label for="origin">
+                                                    <i class="fas fa-circle text-success me-2"></i>Partenza da
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="form-floating">
+                                                <input type="text" class="form-control" id="destination" name="destination" placeholder="Arrivo a">
+                                                <label for="destination">
+                                                    <i class="fas fa-map-marker-alt text-danger me-2"></i>Arrivo a
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <button type="submit" class="btn btn-primary h-100 w-100">
+                                                <i class="fas fa-search me-2"></i>Cerca
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Quick Action Links -->
+                <div class="row justify-content-center mt-3">
+                    <div class="col-lg-8">
+                        <div class="d-flex justify-content-center gap-3">
+                            <a href="{{ url_for('messages') }}" class="btn btn-outline-primary">
+                                <i class="fas fa-comments me-2"></i>I Tuoi Messaggi
+                            </a>
+                            <a href="{{ url_for('browse_shipments') }}" class="btn btn-outline-success">
+                                <i class="fas fa-list me-2"></i>Tutte le Spedizioni
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Stats Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4>{{ (sent_shipments|length + transported_shipments|length) }}</h4>
+                            <p class="mb-0">Totale Spedizioni</p>
+                        </div>
+                        <i class="fas fa-box fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4>{{ sent_shipments|length }}</h4>
+                            <p class="mb-0">Pacchi Inviati</p>
+                        </div>
+                        <i class="fas fa-paper-plane fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4>{{ transported_shipments|length }}</h4>
+                            <p class="mb-0">Consegne Fatte</p>
+                        </div>
+                        <i class="fas fa-truck fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4>{{ current_user.get_average_rating()|round(1) if current_user.get_average_rating() else 'N/A' }}</h4>
+                            <p class="mb-0">Valutazione Media</p>
+                        </div>
+                        <i class="fas fa-star fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Activity -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Attività Recente</h5>
+                    <div class="btn-group" role="group">
+                        <input type="radio" class="btn-check" name="activity-view" id="sent-view" checked>
+                        <label class="btn btn-outline-primary btn-sm" for="sent-view">
+                            <i class="fas fa-paper-plane me-1"></i>Inviati
+                        </label>
+                        
+                        <input type="radio" class="btn-check" name="activity-view" id="transported-view">
+                        <label class="btn btn-outline-success btn-sm" for="transported-view">
+                            <i class="fas fa-truck me-1"></i>Trasportati
+                        </label>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Sent Shipments Table -->
+                    <div id="sent-shipments" class="activity-section">
+                        {% if sent_shipments %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Percorso</th>
+                                            <th>Peso</th>
+                                            <th>Prezzo</th>
+                                            <th>Stato</th>
+                                            <th>Data</th>
+                                            <th>Azioni</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for shipment in sent_shipments %}
+                                            <tr>
+                                                <td><strong>#{{ shipment.id }}</strong></td>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <i class="fas fa-map-marker-alt text-primary me-2"></i>
+                                                        <div>
+                                                            <div class="fw-bold">{{ shipment.origin }}</div>
+                                                            <small class="text-muted">verso {{ shipment.destination }}</small>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>{{ shipment.weight }} kg</td>
+                                                <td>
+                                                    {% if shipment.price %}
+                                                        <strong>€{{ "%.2f"|format(shipment.price) }}</strong>
+                                                    {% else %}
+                                                        <span class="text-muted">In attesa</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-{{ 'warning' if shipment.status.value == 'pending' else 'info' if shipment.status.value == 'booked' else 'primary' if shipment.status.value == 'in_transit' else 'success' if shipment.status.value == 'delivered' else 'danger' }}">
+                                                        {% if shipment.status.value == 'pending' %}In Attesa
+                                                        {% elif shipment.status.value == 'booked' %}Prenotato
+                                                        {% elif shipment.status.value == 'in_transit' %}In Viaggio
+                                                        {% elif shipment.status.value == 'delivered' %}Consegnato
+                                                        {% else %}{{ shipment.status.value.title() }}
+                                                        {% endif %}
+                                                    </span>
+                                                </td>
+                                                <td>{{ shipment.created_at.strftime('%d/%m/%Y') }}</td>
+                                                <td>
+                                                    <div class="btn-group" role="group">
+                                                        <a href="{{ url_for('shipment_details', shipment_id=shipment.id) }}" 
+                                                           class="btn btn-sm btn-outline-primary">
+                                                            <i class="fas fa-eye"></i> Vedi
+                                                        </a>
+                                                        
+                                                        {% if shipment.status.value in ['booked', 'in_transit', 'delivered'] %}
+                                                            <a href="{{ url_for('track_shipment', shipment_id=shipment.id) }}" 
+                                                               class="btn btn-sm btn-outline-info">
+                                                                <i class="fas fa-map-marker-alt"></i> Traccia
+                                                            </a>
+                                                        {% endif %}
+                                                        
+                                                        {% if shipment.status.value == 'booked' %}
+                                                            <a href="{{ url_for('payment', shipment_id=shipment.id) }}" 
+                                                               class="btn btn-sm btn-outline-success">
+                                                                <i class="fas fa-credit-card"></i> Paga
+                                                            </a>
+                                                        {% endif %}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-box fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">Nessun pacco inviato</h5>
+                                <p class="text-muted">Inizia pubblicando la tua prima spedizione!</p>
+                                <a href="{{ url_for('post_shipment') }}" class="btn btn-primary">
+                                    <i class="fas fa-plus me-2"></i>Pubblica Spedizione
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Transported Shipments Table -->
+                    <div id="transported-shipments" class="activity-section" style="display: none;">
+                        {% if transported_shipments %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Percorso</th>
+                                            <th>Peso</th>
+                                            <th>Guadagno</th>
+                                            <th>Stato</th>
+                                            <th>Data</th>
+                                            <th>Azioni</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for shipment in transported_shipments %}
+                                            <tr>
+                                                <td><strong>#{{ shipment.id }}</strong></td>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <i class="fas fa-truck text-success me-2"></i>
+                                                        <div>
+                                                            <div class="fw-bold">{{ shipment.origin }}</div>
+                                                            <small class="text-muted">verso {{ shipment.destination }}</small>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>{{ shipment.weight }} kg</td>
+                                                <td>
+                                                    {% if shipment.price %}
+                                                        <strong class="text-success">€{{ "%.2f"|format(shipment.price) }}</strong>
+                                                    {% else %}
+                                                        <span class="text-muted">In attesa</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-{{ 'warning' if shipment.status.value == 'pending' else 'info' if shipment.status.value == 'booked' else 'primary' if shipment.status.value == 'in_transit' else 'success' if shipment.status.value == 'delivered' else 'danger' }}">
+                                                        {% if shipment.status.value == 'pending' %}In Attesa
+                                                        {% elif shipment.status.value == 'booked' %}Prenotato
+                                                        {% elif shipment.status.value == 'in_transit' %}In Viaggio
+                                                        {% elif shipment.status.value == 'delivered' %}Consegnato
+                                                        {% else %}{{ shipment.status.value.title() }}
+                                                        {% endif %}
+                                                    </span>
+                                                </td>
+                                                <td>{{ shipment.created_at.strftime('%d/%m/%Y') }}</td>
+                                                <td>
+                                                    <div class="btn-group" role="group">
+                                                        <a href="{{ url_for('shipment_details', shipment_id=shipment.id) }}" 
+                                                           class="btn btn-sm btn-outline-primary">
+                                                            <i class="fas fa-eye"></i> Vedi
+                                                        </a>
+                                                        
+                                                        {% if shipment.status.value in ['booked', 'in_transit'] %}
+                                                            <a href="{{ url_for('track_shipment', shipment_id=shipment.id) }}" 
+                                                               class="btn btn-sm btn-outline-info">
+                                                                <i class="fas fa-map-marker-alt"></i> Traccia
+                                                            </a>
+                                                        {% endif %}
+                                                        
+                                                        {% if shipment.status.value == 'in_transit' %}
+                                                            <a href="{{ url_for('mark_delivered', shipment_id=shipment.id) }}" 
+                                                               class="btn btn-sm btn-outline-success">
+                                                                <i class="fas fa-check"></i> Consegnato
+                                                            </a>
+                                                        {% endif %}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-truck fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">Nessuna consegna fatta</h5>
+                                <p class="text-muted">Trova il tuo primo lavoro di trasporto!</p>
+                                <a href="{{ url_for('browse_shipments') }}" class="btn btn-success">
+                                    <i class="fas fa-search me-2"></i>Trova Spedizioni
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
