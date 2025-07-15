@@ -1,8 +1,8 @@
-# Core Flask
+# Core
 flask
 gunicorn
 
-# Flask estensioni comuni
+# Flask extensions
 flask_sqlalchemy
 flask_login
 flask_wtf
@@ -14,12 +14,15 @@ flask_limiter
 flask_bcrypt
 flask_restful
 
-# Altri pacchetti utili
-requests
+# OAuth & autenticazione
+authlib
+oauthlib
 python-dotenv
 email-validator
+
+# Utilità & compatibilità
+requests
 bcrypt
-oauthlib
 passlib
 itsdangerous
 jinja2
@@ -27,8 +30,6 @@ werkzeug
 markupsafe
 blinker
 click
-
-# Compatibilità e strumenti
-typing-extensions
 greenlet
 sqlalchemy
+typing-extensions
