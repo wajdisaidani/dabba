@@ -1,7 +1,34 @@
+# Core Flask
 flask
 gunicorn
+
+# Flask estensioni comuni
 flask_sqlalchemy
 flask_login
-flask_cors
 flask_wtf
+flask_cors
+flask_dance
+flask_migrate
+flask_mail
+flask_limiter
+flask_bcrypt
+flask_restful
+
+# Altri pacchetti utili
 requests
+python-dotenv
+email-validator
+bcrypt
+oauthlib
+passlib
+itsdangerous
+jinja2
+werkzeug
+markupsafe
+blinker
+click
+
+# Compatibilità e strumenti
+typing-extensions
+greenlet
+sqlalchemy
