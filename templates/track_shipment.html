@@ -1,0 +1,356 @@
+{% extends "base.html" %}
+
+{% block title %}Traccia Spedizione #{{ shipment.id }} - dabba{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="fw-bold">Traccia Spedizione #{{ shipment.id }}</h1>
+                    <p class="text-muted">{{ shipment.origin }} → {{ shipment.destination }}</p>
+                </div>
+                <a href="{{ url_for('shipment_details', shipment_id=shipment.id) }}" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-left me-2"></i>Torna ai Dettagli
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- GPS Tracking Controls (for transporters) -->
+    {% if current_user.id == shipment.transporter_id and shipment.status.value in ['booked', 'in_transit'] %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-satellite-dish me-2"></i>
+                        Controlli GPS Live
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="tracking-status" class="alert alert-info d-flex align-items-center mb-3">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Pronto per iniziare il tracciamento GPS
+                    </div>
+                    
+                    <div class="d-flex gap-3 mb-3">
+                        <button id="start-gps" class="btn btn-success" onclick="startGPSTracking()">
+                            <i class="fas fa-play me-2"></i>Inizia Tracciamento GPS
+                        </button>
+                        <button id="stop-gps" class="btn btn-danger" onclick="stopGPSTracking()" style="display: none;">
+                            <i class="fas fa-stop me-2"></i>Ferma Tracciamento GPS
+                        </button>
+                        <button id="get-location" class="btn btn-outline-primary" onclick="getCurrentLocation()">
+                            <i class="fas fa-crosshairs me-2"></i>Posizione Attuale
+                        </button>
+                    </div>
+                    
+                    <div id="current-coordinates" class="small text-muted">
+                        <i class="fas fa-map-marker-alt me-1"></i>
+                        Nessuna posizione disponibile
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <div class="row g-4">
+        <!-- Tracking Timeline -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Aggiornamenti di Tracciamento</h5>
+                </div>
+                <div class="card-body">
+                    {% if tracking_updates %}
+                        <div class="tracking-timeline" id="tracking-timeline">
+                            {% for update in tracking_updates %}
+                                <div class="tracking-item {% if loop.first %}active{% endif %}">
+                                    <div class="tracking-icon">
+                                        {% if loop.first and shipment.status.value == 'delivered' %}
+                                            <i class="fas fa-check-circle text-success"></i>
+                                        {% elif loop.first %}
+                                            <i class="fas fa-truck text-primary"></i>
+                                        {% else %}
+                                            <i class="fas fa-circle text-muted"></i>
+                                        {% endif %}
+                                    </div>
+                                    <div class="tracking-content">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h6 class="fw-bold mb-1">{{ update.location_name }}</h6>
+                                                <p class="mb-1">{{ update.update_message }}</p>
+                                                {% if update.latitude and update.longitude %}
+                                                    <small class="text-muted">
+                                                        <i class="fas fa-map-marker-alt me-1"></i>
+                                                        {{ "%.4f"|format(update.latitude) }}, {{ "%.4f"|format(update.longitude) }}
+                                                    </small>
+                                                {% endif %}
+                                            </div>
+                                            <small class="text-muted">{{ update.timestamp.strftime('%m/%d/%Y %H:%M') }}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                            
+                            <!-- Initial booking update -->
+                            <div class="tracking-item">
+                                <div class="tracking-icon">
+                                    <i class="fas fa-handshake text-info"></i>
+                                </div>
+                                <div class="tracking-content">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h6 class="fw-bold mb-1">Shipment Booked</h6>
+                                            <p class="mb-1">Transporter {{ shipment.transporter.get_full_name() }} accepted the shipment</p>
+                                        </div>
+                                        <small class="text-muted">{{ shipment.updated_at.strftime('%m/%d/%Y %H:%M') }}</small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Creation update -->
+                            <div class="tracking-item">
+                                <div class="tracking-icon">
+                                    <i class="fas fa-plus-circle text-secondary"></i>
+                                </div>
+                                <div class="tracking-content">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h6 class="fw-bold mb-1">Shipment Created</h6>
+                                            <p class="mb-1">Shipment posted by {{ shipment.sender.get_full_name() }}</p>
+                                        </div>
+                                        <small class="text-muted">{{ shipment.created_at.strftime('%m/%d/%Y %H:%M') }}</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-map-marker-alt fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No tracking updates yet</h5>
+                            <p class="text-muted">Updates will appear here once the transporter starts providing location information.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Map Placeholder and Status -->
+        <div class="col-lg-4">
+            <!-- Status Card -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Current Status</h5>
+                </div>
+                <div class="card-body text-center">
+                    <div class="status-indicator mb-3">
+                        {% if shipment.status.value == 'in_transit' %}
+                            <i class="fas fa-truck fa-3x text-primary"></i>
+                        {% elif shipment.status.value == 'delivered' %}
+                            <i class="fas fa-check-circle fa-3x text-success"></i>
+                        {% else %}
+                            <i class="fas fa-clock fa-3x text-warning"></i>
+                        {% endif %}
+                    </div>
+                    <h4 class="fw-bold">{{ shipment.status.value.title().replace('_', ' ') }}</h4>
+                    {% if shipment.status.value == 'in_transit' %}
+                        <p class="text-muted">Your package is on its way</p>
+                    {% elif shipment.status.value == 'delivered' %}
+                        <p class="text-success">Package delivered successfully!</p>
+                        {% if shipment.delivery_date %}
+                            <small class="text-muted">Delivered on {{ shipment.delivery_date.strftime('%B %d, %Y at %H:%M') }}</small>
+                        {% endif %}
+                    {% else %}
+                        <p class="text-muted">Preparing for pickup</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Mock Map -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Live Location</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="mock-map">
+                        <div class="map-placeholder">
+                            <i class="fas fa-map fa-3x text-muted"></i>
+                            <h6 class="mt-3 text-muted">Interactive Map</h6>
+                            {% if tracking_updates %}
+                                {% set latest_update = tracking_updates[0] %}
+                                <p class="text-muted mb-0">Last seen:</p>
+                                <strong>{{ latest_update.location_name }}</strong>
+                                {% if latest_update.latitude and latest_update.longitude %}
+                                    <br><small class="text-muted">{{ "%.4f"|format(latest_update.latitude) }}, {{ "%.4f"|format(latest_update.longitude) }}</small>
+                                {% endif %}
+                            {% else %}
+                                <p class="text-muted">No location data available</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Shipment Info -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Shipment Info</h5>
+                </div>
+                <div class="card-body">
+                    <div class="info-item mb-2">
+                        <strong>Weight:</strong> {{ shipment.weight }} kg
+                    </div>
+                    <div class="info-item mb-2">
+                        <strong>Price:</strong> €{{ "%.2f"|format(shipment.price) }}
+                    </div>
+                    <div class="info-item mb-2">
+                        <strong>Pickup:</strong> {{ shipment.pickup_date.strftime('%m/%d/%Y %H:%M') }}
+                    </div>
+                    {% if shipment.delivery_date %}
+                        <div class="info-item">
+                            <strong>Target Delivery:</strong> {{ shipment.delivery_date.strftime('%m/%d/%Y %H:%M') }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='gps-tracker.js') }}"></script>
+<script>
+    const shipmentId = {{ shipment.id }};
+    
+    // GPS Tracking Functions
+    async function startGPSTracking() {
+        const startBtn = document.getElementById('start-gps');
+        const stopBtn = document.getElementById('stop-gps');
+        
+        try {
+            startBtn.disabled = true;
+            startBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Avvio in corso...';
+            
+            // Start tracking
+            await window.gpsTracker.startTracking(shipmentId);
+            
+            // Update UI
+            startBtn.style.display = 'none';
+            stopBtn.style.display = 'inline-block';
+            
+            // Call server to mark tracking as started
+            await fetch(`/api/tracking/start/${shipmentId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+        } catch (error) {
+            console.error('Error starting GPS:', error);
+            window.gpsTracker.showTrackingStatus(error.message, 'danger');
+            
+            // Reset button
+            startBtn.disabled = false;
+            startBtn.innerHTML = '<i class="fas fa-play me-2"></i>Inizia Tracciamento GPS';
+        }
+    }
+    
+    async function stopGPSTracking() {
+        const startBtn = document.getElementById('start-gps');
+        const stopBtn = document.getElementById('stop-gps');
+        
+        try {
+            // Stop tracking
+            window.gpsTracker.stopTracking();
+            
+            // Update UI
+            stopBtn.style.display = 'none';
+            startBtn.style.display = 'inline-block';
+            startBtn.disabled = false;
+            
+            // Call server to mark tracking as stopped
+            await fetch(`/api/tracking/stop/${shipmentId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+        } catch (error) {
+            console.error('Error stopping GPS:', error);
+            window.gpsTracker.showTrackingStatus('Errore fermando GPS: ' + error.message, 'warning');
+        }
+    }
+    
+    async function getCurrentLocation() {
+        const btn = document.getElementById('get-location');
+        const originalText = btn.innerHTML;
+        
+        try {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Rilevamento...';
+            
+            const position = await window.gpsTracker.getCurrentPosition();
+            
+            // Update coordinates display
+            const coordsElement = document.getElementById('current-coordinates');
+            coordsElement.innerHTML = `
+                <strong>Posizione Rilevata:</strong><br>
+                Lat: ${position.latitude.toFixed(6)}<br>
+                Lng: ${position.longitude.toFixed(6)}<br>
+                Precisione: ${Math.round(position.accuracy)}m<br>
+                Rilevata: ${new Date().toLocaleTimeString()}
+            `;
+            
+            window.gpsTracker.showTrackingStatus('Posizione rilevata con successo', 'success');
+            
+        } catch (error) {
+            console.error('Error getting location:', error);
+            window.gpsTracker.showTrackingStatus('Errore rilevamento posizione: ' + error.message, 'danger');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    }
+    
+    // Check if GPS is supported on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        if (!window.gpsTracker.isSupported()) {
+            document.getElementById('tracking-status').className = 'alert alert-warning d-flex align-items-center mb-3';
+            document.getElementById('tracking-status').innerHTML = `
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                GPS non supportato da questo browser. Aggiornare a un browser moderno.
+            `;
+            
+            // Disable all GPS buttons
+            document.getElementById('start-gps').disabled = true;
+            document.getElementById('get-location').disabled = true;
+        } else {
+            // Request notification permission for tracking alerts
+            window.gpsTracker.requestNotificationPermission();
+        }
+        
+        // Auto-refresh tracking updates every 30 seconds
+        setInterval(async function() {
+            try {
+                const response = await fetch(`/api/tracking/status/${shipmentId}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success && data.updates.length > 0) {
+                        // Could update the timeline here if needed
+                        console.log('Tracking status updated:', data.total_updates, 'updates');
+                    }
+                }
+            } catch (error) {
+                console.error('Error refreshing tracking status:', error);
+            }
+        }, 30000);
+    });
+</script>
+{% endblock %}

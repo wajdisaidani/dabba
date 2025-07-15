@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+
+{% block title %}Profilo - dabba{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0" style="background: var(--light-color); min-height: 100vh;">
+    <!-- Header Tabs -->
+    <div class="d-flex border-bottom" style="border-color: var(--border-color) !important;">
+        <div class="flex-fill text-center py-3" style="border-bottom: 2px solid var(--primary-color);">
+            <span class="fw-bold" style="color: var(--text-color);">Informazioni personali</span>
+        </div>
+        <div class="flex-fill text-center py-3">
+            <span class="text-muted">Account</span>
+        </div>
+    </div>
+
+    <div class="container py-4">
+        <!-- Profile Header -->
+        <div class="d-flex align-items-center mb-4">
+            <div class="position-relative me-3">
+                <div class="rounded-circle d-flex align-items-center justify-content-center" 
+                     style="width: 80px; height: 80px; border: 3px solid var(--primary-color); background: var(--gradient-primary);">
+                    <i class="fas fa-user fa-2x text-white"></i>
+                </div>
+                <div class="position-absolute bottom-0 end-0 bg-success rounded-circle d-flex align-items-center justify-content-center"
+                     style="width: 24px; height: 24px;">
+                    <i class="fas fa-check text-white" style="font-size: 0.7rem;"></i>
+                </div>
+            </div>
+            <div class="flex-grow-1">
+                <h2 class="mb-1" style="color: var(--text-color);">{{ current_user.get_full_name() }}</h2>
+                <p class="text-muted mb-0">Utente dabba</p>
+            </div>
+            <i class="fas fa-chevron-right text-muted"></i>
+        </div>
+
+        <!-- Earnings Card -->
+        <div class="card mb-4" style="background: linear-gradient(135deg, #28a745, #20c997); border: none; border-radius: 16px;">
+            <div class="card-body p-4">
+                <div class="text-white">
+                    <p class="mb-1 opacity-75">Da quando sei su dabba, hai speso</p>
+                    <h1 class="display-4 fw-bold mb-0">{{ savings or "0" }} €</h1>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Actions -->
+        <div class="mb-4">
+            <a href="#" class="d-block text-decoration-none py-3" style="color: var(--primary-color); border-bottom: 1px solid var(--border-color);">
+                <i class="fas fa-edit me-3"></i>Modifica i dettagli personali
+            </a>
+            <a href="#" class="d-block text-decoration-none py-3" style="color: var(--primary-color); border-bottom: 1px solid var(--border-color);">
+                <i class="fas fa-camera me-3"></i>Modifica la foto profilo
+            </a>
+        </div>
+
+        <!-- Connected Accounts -->
+        {% if current_user.oauth_provider %}
+        <div class="mb-4">
+            <h5 class="mb-3" style="color: var(--text-color);">Account collegati</h5>
+            <div class="d-flex align-items-center justify-content-between p-3 rounded" style="border: 1px solid var(--border-color); background: var(--card-bg);">
+                <div class="d-flex align-items-center">
+                    {% if current_user.oauth_provider == 'google' %}
+                        <i class="fab fa-google me-3 text-danger"></i>
+                        <span style="color: var(--text-color);">Google</span>
+                    {% elif current_user.oauth_provider == 'apple' %}
+                        <i class="fab fa-apple me-3" style="color: var(--text-color);"></i>
+                        <span style="color: var(--text-color);">Apple</span>
+                    {% elif current_user.oauth_provider == 'facebook' %}
+                        <i class="fab fa-facebook me-3 text-primary"></i>
+                        <span style="color: var(--text-color);">Facebook</span>
+                    {% endif %}
+                </div>
+                {% if current_user.password_hash %}
+                <a href="{{ url_for('oauth.disconnect_oauth', provider=current_user.oauth_provider) }}" 
+                   class="btn btn-sm btn-outline-danger">Disconnetti</a>
+                {% else %}
+                <span class="text-muted small">Principale</span>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Verification Section -->
+        <div class="mb-4">
+            <h5 class="mb-3" style="color: var(--text-color);">Hai un Profilo verificato</h5>
+            
+            <div class="d-flex align-items-center py-2">
+                <div class="rounded-circle d-flex align-items-center justify-content-center me-3"
+                     style="width: 24px; height: 24px; background: var(--primary-color);">
+                    <i class="fas fa-check text-white" style="font-size: 0.7rem;"></i>
+                </div>
+                <span style="color: var(--text-color);">Documento verificato</span>
+            </div>
+            
+            <div class="d-flex align-items-center py-2">
+                <div class="rounded-circle d-flex align-items-center justify-content-center me-3"
+                     style="width: 24px; height: 24px; background: var(--primary-color);">
+                    <i class="fas fa-check text-white" style="font-size: 0.7rem;"></i>
+                </div>
+                <span style="color: var(--text-color);">{{ current_user.email }}</span>
+            </div>
+            
+            {% if current_user.phone %}
+            <div class="d-flex align-items-center py-2">
+                <div class="rounded-circle d-flex align-items-center justify-content-center me-3"
+                     style="width: 24px; height: 24px; background: var(--primary-color);">
+                    <i class="fas fa-check text-white" style="font-size: 0.7rem;"></i>
+                </div>
+                <span style="color: var(--text-color);">{{ current_user.phone }}</span>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="mb-4">
+            <h5 class="text-white mb-3">Azioni rapide</h5>
+            
+            <div class="row g-3">
+                <div class="col-6">
+                    <a href="{{ url_for('browse_shipments') }}" class="text-decoration-none">
+                        <div class="text-center p-3">
+                            <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2"
+                                 style="width: 48px; height: 48px;">
+                                <i class="fas fa-search text-white"></i>
+                            </div>
+                            <small class="text-white">Cerca</small>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-6">
+                    <a href="{{ url_for('post_shipment') }}" class="text-decoration-none">
+                        <div class="text-center p-3">
+                            <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2"
+                                 style="width: 48px; height: 48px;">
+                                <i class="fas fa-plus text-white"></i>
+                            </div>
+                            <small class="text-white">Pubblica</small>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats and Actions -->
+        <div class="row g-3 mb-4">
+            <div class="col-4">
+                <div class="text-center">
+                    <div class="h4 text-white mb-1">{{ current_user.sent_shipments.count() }}</div>
+                    <small class="text-muted">Spedizioni</small>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="text-center">
+                    <div class="h4 text-white mb-1">{{ current_user.transported_shipments.count() }}</div>
+                    <small class="text-muted">Trasporti</small>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="text-center">
+                    <div class="d-flex align-items-center justify-content-center mb-1">
+                        {% set avg_rating = current_user.get_average_rating() or 0 %}
+                        {% for i in range(1, 6) %}
+                            {% if i <= avg_rating %}
+                                <i class="fas fa-star text-warning me-1" style="font-size: 0.9rem;"></i>
+                            {% else %}
+                                <i class="far fa-star text-muted me-1" style="font-size: 0.9rem;"></i>
+                            {% endif %}
+                        {% endfor %}
+                        <span class="text-white ms-1">{{ "%.1f"|format(avg_rating) }}</span>
+                    </div>
+                    <small class="text-muted">{{ current_user.received_reviews.count() }} recensioni</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reviews Section -->
+        {% if current_user.received_reviews.count() > 0 %}
+        <div class="mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="text-white mb-0">Recensioni</h5>
+                <button class="btn btn-link text-info p-0" data-bs-toggle="collapse" data-bs-target="#reviewsCollapse">
+                    <small>Vedi tutte</small>
+                </button>
+            </div>
+            
+            <!-- Latest Review Preview -->
+            {% set latest_review = current_user.received_reviews.order_by('created_at desc').first() %}
+            <div class="bg-dark rounded-3 p-3 mb-3 border border-secondary">
+                <div class="d-flex align-items-start">
+                    <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center me-3"
+                         style="width: 40px; height: 40px;">
+                        <i class="fas fa-user text-white"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="d-flex align-items-center mb-1">
+                            <span class="text-white fw-bold me-2">{{ latest_review.reviewer.get_full_name() }}</span>
+                            <div class="d-flex">
+                                {% for i in range(1, 6) %}
+                                    {% if i <= latest_review.rating %}
+                                        <i class="fas fa-star text-warning" style="font-size: 0.7rem;"></i>
+                                    {% else %}
+                                        <i class="far fa-star text-muted" style="font-size: 0.7rem;"></i>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% if latest_review.comment %}
+                        <p class="text-light mb-1" style="font-size: 0.9rem;">{{ latest_review.comment }}</p>
+                        {% endif %}
+                        <small class="text-muted">{{ latest_review.created_at.strftime('%B %Y') }}</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- All Reviews Collapsed -->
+            <div class="collapse" id="reviewsCollapse">
+                {% for review in current_user.received_reviews.order_by('created_at desc').limit(10) %}
+                    {% if not loop.first %}
+                    <div class="bg-dark rounded-3 p-3 mb-3 border border-secondary">
+                        <div class="d-flex align-items-start">
+                            <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center me-3"
+                                 style="width: 40px; height: 40px;">
+                                <i class="fas fa-user text-white"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-center mb-1">
+                                    <span class="text-white fw-bold me-2">{{ review.reviewer.get_full_name() }}</span>
+                                    <div class="d-flex">
+                                        {% for i in range(1, 6) %}
+                                            {% if i <= review.rating %}
+                                                <i class="fas fa-star text-warning" style="font-size: 0.7rem;"></i>
+                                            {% else %}
+                                                <i class="far fa-star text-muted" style="font-size: 0.7rem;"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% if review.comment %}
+                                <p class="text-light mb-1" style="font-size: 0.9rem;">{{ review.comment }}</p>
+                                {% endif %}
+                                <small class="text-muted">{{ review.created_at.strftime('%B %Y') }}</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Logout Button -->
+        <div class="text-center mt-5">
+            <a href="{{ url_for('logout') }}" class="btn btn-outline-danger">
+                <i class="fas fa-sign-out-alt me-2"></i>Esci
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Dark theme override for profile page
+document.documentElement.setAttribute('data-theme', 'dark');
+</script>
+{% endblock %}
